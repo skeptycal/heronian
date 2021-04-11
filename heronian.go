@@ -19,12 +19,7 @@ func sortDec(s sort.Float64Slice) sort.Float64Slice {
 }
 
 func New(a, b, c float64) *Triangle {
-	s := []float64{a, b, c}
-
-	sort.Sort(sort.Reverse(sort.Float64Slice(s)))
-	sort.Float64s(s)
-
-	return &Triangle{s}
+	return &Triangle{sortDec([]float64{a, b, c})}
 }
 
 type Triangle struct {
