@@ -4,14 +4,43 @@ package heronian
 import (
 	"fmt"
 	"math"
+	"math/rand"
+	"sort"
+	"time"
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func sortDec(s sort.Float64Slice) sort.Float64Slice {
+	sort.Sort(sort.Reverse(sort.Float64Slice(s)))
+	return s
+}
+
 func New(a, b, c float64) *Triangle {
-	return &Triangle{a, b, c}
+	s := []float64{a, b, c}
+
+	sort.Sort(sort.Reverse(sort.Float64Slice(s)))
+	sort.Float64s(s)
+
+	return &Triangle{s}
 }
 
 type Triangle struct {
-	a, b, c float64 // sides of the triangle
+	sides sort.Float64Slice // sides of the triangle
+}
+
+func (t *Triangle) a() float64 {
+	return t.sides[0]
+}
+
+func (t *Triangle) b() float64 {
+	return t.sides[1]
+}
+
+func (t *Triangle) c() float64 {
+	return t.sides[2]
 }
 
 func (t Triangle) IsHero() bool {
@@ -23,11 +52,11 @@ func (t Triangle) Area() float64 {
 }
 
 func (t Triangle) Perimeter() float64 {
-	return t.a + t.b + t.c
+	return t.a() + t.b() + t.c()
 }
 
 func (t Triangle) SemiPerimeter() float64 {
-	return t.Perimeter() / 2.0
+	return t.Perimeter() / 2
 }
 
 // Heron is the most efficient method tested for calculating
@@ -38,22 +67,29 @@ func (t Triangle) Heron() float64 {
 
 // hero1 is an alternative implementation.
 func (t Triangle) hero1() float64 {
+	a := t.a()
+	b := t.b()
+	c := t.c()
 	s := t.SemiPerimeter()
-	return math.Sqrt(s * (s - t.a) * (s - t.b) * (s - t.c))
+	n := s * (s - a) * (s - b) * (s - c)
+	return math.Sqrt(n)
 }
 
 // hero2 is an alternative implementation.
 func (t Triangle) hero2() float64 {
-	return math.Sqrt((t.a+t.b+t.c)*(-t.a+t.b+t.c)*(t.a-t.b+t.c)*(t.a+t.b-t.c)) / 4.0
+	a := t.a()
+	b := t.b()
+	c := t.c()
+	return math.Sqrt((a+b+c)*(-a+b+c)*(a-b+c)*(a+b-c)) / 4.0
 }
 
 // hero3 is an alternative implementation used in the
 // stable() implementation.
 func (t Triangle) hero3() float64 {
 	tr := t.stable()
-	a := tr.a // should be largest
-	b := tr.b // should be middle
-	c := tr.c // should be smallest
+	a := tr.a() // should be largest
+	b := tr.b() // should be middle
+	c := tr.c() // should be smallest
 	return (a + (b + c)) * (c - (a - b)) * (c + (a - b)) * (a + (b - c))
 }
 
@@ -64,29 +100,21 @@ func (t Triangle) hero3() float64 {
 // The stable alternative involves arranging the lengths of
 // the sides so that a ≥ b ≥ c and computing.
 func (t Triangle) stable() Triangle {
-	a := t.a // should be largest
-	b := t.b // should be middle
-	c := t.c // should be smallest
+	a := t.a() // should be largest
+	b := t.b() // should be middle
+	c := t.c() // should be smallest
 
-	if b < c {
-		b, c = c, b
-	}
+	s := sort.Float64Slice([]float64{a, b, c})
+	// sort.SearchFloat64s(a []float64, x float64)
+	sort.Sort(sort.Reverse(sort.Float64Slice(s)))
 
-	if a < c {
-		a, c = c, a
-	}
-
-	if a < b {
-		a, b = b, a
-	}
-
-	return Triangle{a, b, c}
+	return Triangle{s}
 }
 
 func (t Triangle) String() string {
-	return fmt.Sprintf("Δ [%0.0f,%0.0f,%0.0f]", t.a, t.b, t.c)
+	return fmt.Sprintf("Δ [%0.0f,%0.0f,%0.0f]", t.a(), t.b(), t.c())
 }
 
 func (t Triangle) Sides() string {
-	return fmt.Sprintf("%0.0f,%0.0f,%0.0f", t.a, t.b, t.c)
+	return fmt.Sprintf("%0.0f,%0.0f,%0.0f", t.a(), t.b(), t.c())
 }

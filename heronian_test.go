@@ -2,21 +2,44 @@ package heronian
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 )
 
-const (
-	defaultSampleCount int     = 1000              // default number of samples to generate
-	maxSampleCount     int     = 10000             // maximum number of samples to generate
-	minSampleCount     int     = 5                 // minimum number of samples to generate
-	maxSideLength      float64 = 20.0              // maximum length of any side of the random test triangles
-	minSideLength      float64 = 1.0               // minimum length of any side of the random test triangles
-	MaxUint            uint    = ^uint(0)          // maximum value of a uint variable
-	MinUint            uint    = 0                 // minimum value of a uint variable
-	MaxInt             int     = int(MaxUint >> 1) // maximum value of an int variable
-	MinInt             int     = -MaxInt - 1       // minimum value of an int variable
-)
+func TestTriangle(t *testing.T) {
+
+	addons := triangleTestSet{
+		MakeTriangleTest(1, 1, 1),
+		MakeTriangleTest(5, 5, 6),
+		MakeTriangleTest(3, 4, 5),
+		MakeTriangleTest(51, 52, 53),
+	}
+
+	for _, tt := range MakeTriangleTestSet(5, addons) {
+
+		tr := New(tt.sides.a, tt.sides.b, tt.sides.c)
+
+		funcs := []funcstruct{
+			{"Perimeter", Triangle.Perimeter, tr.Perimeter},
+			{"Heron", Triangle.Heron, tr.Heron},
+			{"SemiPerimeter", Triangle.SemiPerimeter, tr.SemiPerimeter},
+			// {"hero1", Triangle.hero1, tr.Area},
+			// {"hero2", Triangle.hero2, tr.Area},
+			// {"hero3", Triangle.hero3, tr.Area},
+		}
+		for _, fs := range funcs {
+			t.Run(tt.name, func(t *testing.T) {
+				got := fs.got(*tr)
+				want := fs.want()
+				name := fs.name
+				// name := fs.name[strings.LastIndex(fs.name, "."):]
+				if !FuzzyEquals(got, want, 0) {
+					t.Errorf("%s(%s, p: %0.1f, a: %0.1f) = %v, want %v", name, tr, tr.Perimeter(), tr.Area(), got, want)
+				}
+			})
+		}
+
+	}
+}
 
 type funcstruct struct {
 	name string
@@ -24,7 +47,7 @@ type funcstruct struct {
 	want func() float64
 }
 
-type triangleFromSides struct {
+type triangleSides struct {
 	a float64
 	b float64
 	c float64
@@ -32,7 +55,7 @@ type triangleFromSides struct {
 
 type triangleTestsStruct struct {
 	name      string
-	sides     triangleFromSides
+	sides     triangleSides
 	perimeter float64
 	area      float64
 }
@@ -40,18 +63,28 @@ type triangleTestsStruct struct {
 type triangleTestSet []triangleTestsStruct
 
 var premadeTriangleTests = triangleTestSet{
-	// TODO: Add test cases.
-	{"3,4,5", triangleFromSides{3, 4, 5}, 12, 6},
-	{"10,13,13", triangleFromSides{10, 13, 13}, 3, 60},
-	{"17,10,21", triangleFromSides{17, 10, 21}, 48, 84},
-	{"5,12,13", triangleFromSides{5, 12, 13}, 30, 30},
-	{"3,4,5", triangleFromSides{3, 4, 5}, 12, 6},
-	{"3,4,5", triangleFromSides{3, 4, 5}, 12, 6},
-	{"3,4,5", triangleFromSides{3, 4, 5}, 12, 6},
+	MakeTriangleTest(3, 4, 5),
+	MakeTriangleTest(5, 5, 5),
+	MakeTriangleTest(10, 13, 13),
+	MakeTriangleTest(17, 10, 21),
+	MakeTriangleTest(5, 12, 13),
 }
 
-func side() float64 {
-	return rand.Float64()*(maxSideLength-minSideLength) + minSideLength
+func MakeTriangleTest(a, b, c float64) triangleTestsStruct {
+	if a < minSideLength || a > maxSideLength {
+		a = side()
+	}
+	if b < minSideLength || b > maxSideLength {
+		b = side()
+	}
+	if c < minSideLength || c > maxSideLength {
+		c = side()
+	}
+
+	tr := New(a, b, c)
+
+	name := fmt.Sprintf("%0.0f,%0.0f,%0.0f", tr.a(), tr.b(), tr.c())
+	return triangleTestsStruct{name, triangleSides{tr.a(), tr.b(), tr.c()}, tr.Perimeter(), tr.Area()}
 }
 
 func MakeTriangleTestSet(n int, addons []triangleTestsStruct) (retval []triangleTestsStruct) {
@@ -59,52 +92,79 @@ func MakeTriangleTestSet(n int, addons []triangleTestsStruct) (retval []triangle
 		n = defaultSampleCount
 	}
 
+	// add tests passed as parameters
 	retval = append(retval, addons...)
 
+	// add premade tests
 	retval = append(retval, premadeTriangleTests...)
 
+	// add n random tests
 	for i := 1; i < n; i++ {
-		a := side()
-		b := side()
-		c := side()
-		tr := New(a, b, c)
-
-		name := fmt.Sprintf("%0.0f,%0.0f,%0.0f", tr.a, tr.b, tr.c)
-		ts := triangleTestsStruct{name, triangleFromSides{tr.a, tr.b, tr.c}, 0, 0}
-		retval = append(retval, ts)
+		retval = append(retval, MakeTriangleTest(0, 0, 0))
 	}
 	return
 }
 
-func TestTriangle_Perimeter(t *testing.T) {
+func Test_FuzzyEqual(t *testing.T) {
+	const fuzzyTestRelativeErrorAllowed float64 = 0.000001 // 1 ppm for tests
 
-	/// add any premade triangles to test here
-	addons := triangleTestSet{
-		{"1,1,1", triangleFromSides{1, 1, 1}, 12, 6},
+	type args struct {
+		a float64
+		b float64
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		// using fuzzyTestRelativeErrorAllowed (1ppm) for testing
+		{"", args{1, 2}, false},
+		{"", args{100, 200}, false},
+		{"", args{199, 200}, false},
+		{"", args{1999999, 2000000}, true},
+		{"", args{999998, 1000000}, false},  // 2 ppm
+		{"", args{999999, 1000000}, false},  // 1 ppm
+		{"", args{999999.9, 1000000}, true}, // 0.1 ppm
+		{"", args{999999.5, 1000000}, true}, // 0.5 ppm
+	}
+	for _, tt := range tests {
+		a := tt.args.a
+		b := tt.args.b
+		if a > b {
+			a, b = b, a
+		}
+		aErrorAllowed := a * fuzzyTestRelativeErrorAllowed
+		absError := b - a
+
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FuzzyEquals(tt.args.a, tt.args.b, fuzzyTestRelativeErrorAllowed); got != tt.want {
+				t.Errorf("fuzzyEqual(%0.0f, %0.0f) (allowed: %f, absError: %f) got %v, want %v", tt.args.a, tt.args.b, aErrorAllowed, absError, got, tt.want)
+			}
+		})
 	}
 
-	for _, tt := range MakeTriangleTestSet(20, addons) {
-		tr := Triangle{
-			a: tt.sides.a,
-			b: tt.sides.b,
-			c: tt.sides.c,
+	// test for custom relativeErrorAllowed
+	t.Run("custom relativeErrorAllowed", func(t *testing.T) {
+		a := 1.9
+		b := 2.0
+		customRelativeErrorAllowed := 0.1 // 10% error allowed
+		got := FuzzyEquals(a, b, customRelativeErrorAllowed)
+		want := true
+		if got != want {
+			t.Errorf("fuzzyEqual(%0.1f, %0.1f) (allowed: %f, absError: %f) got %v, want %v", a, b, a*customRelativeErrorAllowed, b-a, got, want)
 		}
-		funcs := []funcstruct{
-			{"Perimeter", Triangle.Perimeter, tr.SemiPerimeter},
-			{"Area", Triangle.Area, tr.SemiPerimeter},
-			{"hero1", Triangle.hero1, tr.hero1},
-			{"hero2", Triangle.hero2, tr.hero2},
-			{"hero3", Triangle.hero3, tr.hero3},
-		}
-		for _, fs := range funcs {
-			t.Run(tt.name, func(t *testing.T) {
-				got := fs.got(tr)
-				want := fs.want()
-				if got != want {
-					t.Errorf("Triangle.%s(%s) = %v, want %v", fs.name, tr, got, want)
-				}
-			})
-		}
+	})
 
-	}
+	// test for custom relativeErrorAllowed out of range triggering default
+	// also, b < a ... so should trigger value swap of a and b
+	t.Run("custom relativeErrorAllowed", func(t *testing.T) {
+		a := 2.0
+		b := 1.9
+		customRelativeErrorAllowed := -1.0 // 10% error allowed
+		got := FuzzyEquals(a, b, customRelativeErrorAllowed)
+		want := false
+		if got != want {
+			t.Errorf("fuzzyEqual(%0.1f, %0.1f) (allowed: %f, absError: %f) got %v, want %v", a, b, a*DefaultRelativeErrorAllowed, a-b, got, want)
+		}
+	})
 }
