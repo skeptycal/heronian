@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	t := heronian.New(3, 4, 5)
+	t := heronian.New(5, 3, 4)
 
 	fmt.Printf("t#: %#v\n", t)
 	fmt.Printf("t: %s\n", t)
@@ -16,7 +16,7 @@ func main() {
 	fmt.Printf("Perimeter: %v\n", t.Perimeter())
 	fmt.Printf("Area: %v\n", t.Area())
 	fmt.Printf("SemiPerimeter: %v\n", t.SemiPerimeter())
-	fmt.Printf("Heron: %v\n", t.Heron())
+	fmt.Printf("Heron: %v\n", t.HeronArea())
 	fmt.Printf("IsHero: %v\n", t.IsHero())
 
 	s := heronian.NewShape(3, 4, 5)

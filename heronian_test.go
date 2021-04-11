@@ -2,6 +2,7 @@ package heronian
 
 import (
 	"fmt"
+	"math"
 	"testing"
 )
 
@@ -14,26 +15,26 @@ func TestTriangle(t *testing.T) {
 		MakeTriangleTest(51, 52, 53),
 	}
 
-	for _, tt := range MakeTriangleTestSet(5, addons) {
+	for testNum, tt := range MakeTriangleTestSet(5, addons) {
 
 		tr := New(tt.sides.a, tt.sides.b, tt.sides.c)
 
 		funcs := []funcstruct{
 			{"Perimeter", Triangle.Perimeter, tr.Perimeter},
-			{"Heron", Triangle.Heron, tr.Heron},
+			{"HeronArea", Triangle.HeronArea, tr.HeronArea},
 			{"SemiPerimeter", Triangle.SemiPerimeter, tr.SemiPerimeter},
-			// {"hero1", Triangle.hero1, tr.Area},
-			// {"hero2", Triangle.hero2, tr.Area},
-			// {"hero3", Triangle.hero3, tr.Area},
+			{"hero1", Triangle.hero1, tr.Area},
+			{"hero2", Triangle.hero2, tr.Area},
+			{"hero3", Triangle.hero3, tr.Area},
 		}
 		for _, fs := range funcs {
 			t.Run(tt.name, func(t *testing.T) {
 				got := fs.got(*tr)
 				want := fs.want()
-				name := fs.name
-				// name := fs.name[strings.LastIndex(fs.name, "."):]
-				if !FuzzyEquals(got, want, 0) {
-					t.Errorf("%s(%s, p: %0.1f, a: %0.1f) = %v, want %v", name, tr, tr.Perimeter(), tr.Area(), got, want)
+				if !math.IsNaN(got) && !math.IsNaN(want) { // there really shouldn't be NaN values ... but eh.
+					if !FuzzyEquals(got, want, 0) {
+						t.Errorf("#%3d: %s(%s, p: %0.1f, a: %0.1f) = %v, want %v", testNum, fs.name, tr, tr.Perimeter(), tr.Area(), got, want)
+					}
 				}
 			})
 		}

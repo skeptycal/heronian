@@ -22,7 +22,7 @@ type shape struct {
 }
 
 func NewShape(d ...float64) Shape {
-	return &shape{d}
+	return &shape{SortDec(d...)}
 }
 
 func (s *shape) Perimeter() float64 {

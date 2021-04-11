@@ -1,5 +1,15 @@
 package heronian
 
+import (
+	"math/rand"
+	"sort"
+	"time"
+)
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 // DefaultRelativeErrorAllowed defines the maximum relative error allowed
 // between floating point numbers. It may be used with the FuzzyEquals()
 // function to determine if two numbers are equal within a given
@@ -13,6 +23,15 @@ package heronian
 // value was set as a variable instead of a constant so you may adjust
 // it  as needed.
 var DefaultRelativeErrorAllowed float64 = 0.000001
+
+// FloatIsInt checks whether a float is also an integer.
+func FloatIsInt(val float64) bool {
+	return val == float64(int(val))
+}
+
+func Flip() bool {
+	return rand.Float64()*100+1 > 50
+}
 
 // FuzzyEquals is a helper function used to compare two float64 values
 // and make sure they are equal within allowable tolerances
@@ -38,4 +57,9 @@ func FuzzyEquals(a, b, relativeErrorAllowed float64) bool {
 	absoluteErrorAllowed := a * relativeErrorAllowed
 
 	return b-a < absoluteErrorAllowed
+}
+
+func SortDec(s ...float64) sort.Float64Slice {
+	sort.Sort(sort.Reverse(sort.Float64Slice(s)))
+	return s
 }

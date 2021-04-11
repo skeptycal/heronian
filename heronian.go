@@ -13,29 +13,12 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func sortDec(s sort.Float64Slice) sort.Float64Slice {
-	sort.Sort(sort.Reverse(sort.Float64Slice(s)))
-	return s
-}
-
 func New(a, b, c float64) *Triangle {
-	return &Triangle{sortDec([]float64{a, b, c})}
+	return &Triangle{SortDec([]float64{a, b, c}...)}
 }
 
 type Triangle struct {
 	sides sort.Float64Slice // sides of the triangle
-}
-
-func (t *Triangle) a() float64 {
-	return t.sides[0]
-}
-
-func (t *Triangle) b() float64 {
-	return t.sides[1]
-}
-
-func (t *Triangle) c() float64 {
-	return t.sides[2]
 }
 
 func (t Triangle) IsHero() bool {
@@ -43,7 +26,7 @@ func (t Triangle) IsHero() bool {
 }
 
 func (t Triangle) Area() float64 {
-	return t.Heron()
+	return t.HeronArea()
 }
 
 func (t Triangle) Perimeter() float64 {
@@ -54,9 +37,9 @@ func (t Triangle) SemiPerimeter() float64 {
 	return t.Perimeter() / 2
 }
 
-// Heron is the most efficient method tested for calculating
+// HeronArea is the most efficient method tested for calculating
 // the area of a triangle given three sides.
-func (t Triangle) Heron() float64 {
+func (t Triangle) HeronArea() float64 {
 	return t.hero1()
 }
 
@@ -88,28 +71,32 @@ func (t Triangle) hero3() float64 {
 	return (a + (b + c)) * (c - (a - b)) * (c + (a - b)) * (a + (b - c))
 }
 
-// stable is an alternative implementation. It is stable when
+// stable is a utility to return the three values for the sides of a triangle.
+// alternative implementation. It is stable when
 // using floating point arithmetic for triangles containing
 // very small angles.
 //
 // The stable alternative involves arranging the lengths of
 // the sides so that a ≥ b ≥ c and computing.
 func (t Triangle) stable() Triangle {
-	a := t.a() // should be largest
-	b := t.b() // should be middle
-	c := t.c() // should be smallest
+	// a := t.a() // should be largest
+	// b := t.b() // should be middle
+	// c := t.c() // should be smallest
 
-	s := sort.Float64Slice([]float64{a, b, c})
-	// sort.SearchFloat64s(a []float64, x float64)
+	s := []float64{t.a(), t.b(), t.c()}
 	sort.Sort(sort.Reverse(sort.Float64Slice(s)))
 
 	return Triangle{s}
 }
 
 func (t Triangle) String() string {
-	return fmt.Sprintf("Δ [%0.0f,%0.0f,%0.0f]", t.a(), t.b(), t.c())
+	return fmt.Sprintf("Δ [%s]", t.Sides())
 }
 
+// Sides returns a string representation of the lengths of
+// sides of the triangle ordered from largest to smallest.
+// This is meant to be used for reporting and summarizing and
+// all numbers are rounded significantly.
 func (t Triangle) Sides() string {
 	return fmt.Sprintf("%0.0f,%0.0f,%0.0f", t.a(), t.b(), t.c())
 }
