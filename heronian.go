@@ -1,3 +1,4 @@
+// Package heronian is a playground for testing Heronian (or Hero) triangles.
 package heronian
 
 import (
