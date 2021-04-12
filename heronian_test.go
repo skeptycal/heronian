@@ -6,6 +6,33 @@ import (
 	"testing"
 )
 
+// Benchmark Results
+/*
+goos: darwin
+goarch: amd64
+pkg: github.com/skeptycal/heronian
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+=====================================================================================================
+BenchmarkHero2-8   	173002899	         6.64 ns/op	       0 B/op	       0 allocs/op
+BenchmarkHero1-8   	100000000	        10.14 ns/op	       0 B/op	       0 allocs/op   1.53x slower
+BenchmarkHero3-8   	 8463418	        142.3 ns/op	      64 B/op	       3 allocs/op  21.43x slower
+
+/// hero3 (the so-called stable method) ... is not very stable and much slower (no longer tested)
+*/
+
+func BenchmarkHero2(b *testing.B) {
+	tr := New(3, 4, 5)
+	for i := 0; i < b.N; i++ {
+		tr.hero2()
+	}
+}
+func BenchmarkHero1(b *testing.B) {
+	tr := New(3, 4, 5)
+	for i := 0; i < b.N; i++ {
+		tr.hero1()
+	}
+}
+
 func TestTriangle(t *testing.T) {
 
 	addons := triangleTestSet{
@@ -25,7 +52,7 @@ func TestTriangle(t *testing.T) {
 			{"SemiPerimeter", Triangle.SemiPerimeter, tr.SemiPerimeter},
 			{"hero1", Triangle.hero1, tr.Area},
 			{"hero2", Triangle.hero2, tr.Area},
-			{"hero3", Triangle.hero3, tr.Area},
+			// {"hero3", Triangle.hero3, tr.Area},
 		}
 		for _, fs := range funcs {
 			t.Run(tt.name, func(t *testing.T) {
@@ -169,3 +196,10 @@ func Test_FuzzyEqual(t *testing.T) {
 		}
 	})
 }
+
+// func BenchmarkHero3(b *testing.B) {
+// 	tr := New(3, 4, 5)
+// 	for i := 0; i < b.N; i++ {
+// 		tr.hero3()
+// 	}
+// }

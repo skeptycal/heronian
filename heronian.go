@@ -39,6 +39,8 @@ func (t Triangle) SemiPerimeter() float64 {
 
 // HeronArea is the most efficient method tested for calculating
 // the area of a triangle given three sides.
+//
+// This was not an exhaustive search for efficient methods ...
 func (t Triangle) HeronArea() float64 {
 	return t.hero1()
 }

@@ -46,7 +46,6 @@ func TestFloatIsInt(t *testing.T) {
 		})
 	}
 }
-
 func TestFlip(t *testing.T) {
 	// TODO - this "test" isn't actually testing the functionality.
 	// It just runs the function many times and verifies that the
