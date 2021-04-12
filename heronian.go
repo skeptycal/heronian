@@ -25,6 +25,10 @@ func (t Triangle) IsHero() bool {
 	return false
 }
 
+func (t Triangle) IsValid() bool {
+	return t.Area() > 0 && t.Perimeter() > 0
+}
+
 func (t Triangle) Area() float64 {
 	return t.HeronArea()
 }
